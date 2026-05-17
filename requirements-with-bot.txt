@@ -1,0 +1,25 @@
+# Core FastAPI dependencies
+fastapi==0.110.0
+uvicorn[standard]==0.28.0
+google-generativeai==0.4.1
+pydantic==2.6.4
+python-dotenv==1.0.0
+
+# Zoom Bot integration
+requests==2.31.0
+PyJWT==2.8.1
+
+# Transcription options (choose one or both)
+# Local transcription (free, offline) - recommended for MVP
+openai-whisper==20231117
+
+# Cloud transcription (paid, better accuracy) - optional
+# assemblyai==0.17.0
+
+# Audio processing (optional, for duration estimation)
+pydub==0.25.1
+
+# Note: Install audio processing tools via system package manager:
+# macOS: brew install ffmpeg
+# Ubuntu: sudo apt-get install ffmpeg
+# Windows: Download from https://ffmpeg.org/download.html
