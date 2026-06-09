@@ -19,7 +19,7 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0b0f19;
+            background-color: #070a13;
             color: #cbd5e1;
         }
         h1, h2, h3, h4, .font-heading {
@@ -77,7 +77,7 @@
 <body class="h-screen overflow-hidden flex">
 
     <!-- SIDEBAR -->
-    <div class="w-80 bg-[#0d1324] border-r border-slate-800/60 flex flex-col justify-between h-full z-10 shadow-xl shadow-black/20">
+    <div class="w-80 bg-[#0d1222] border-r border-slate-800/60 flex flex-col justify-between h-full z-10 shadow-xl shadow-black/20">
         <div class="p-6 flex-1 flex flex-col min-h-0">
             <!-- Header Brand -->
             <div class="flex items-center space-x-3 mb-8">
@@ -113,7 +113,7 @@
         </div>
 
         <!-- Sidebar Footer -->
-        <div class="p-4 border-t border-slate-800/60 bg-[#0a0f1d]/80">
+        <div class="p-4 border-t border-slate-800/60 bg-[#090d18]">
             <div class="bg-slate-900/60 rounded-xl p-3 border border-slate-800/40 relative overflow-hidden group">
                 <div class="absolute -right-6 -bottom-6 w-16 h-16 rounded-full bg-indigo-500/5 group-hover:scale-150 transition-transform duration-500"></div>
                 <div class="flex items-center justify-between mb-2">
@@ -132,16 +132,20 @@
     </div>
 
     <!-- MAIN CONTENT AREA -->
-    <div class="flex-1 flex flex-col h-full bg-[#090d16] overflow-hidden">
+    <div class="flex-1 flex flex-col h-full bg-[#070a13] overflow-hidden">
         
         <!-- Header Topbar -->
-        <header class="h-16 border-b border-slate-800/50 bg-[#0d1324]/40 backdrop-blur-md px-8 flex items-center justify-between">
+        <header class="h-16 border-b border-slate-800/50 bg-[#0d1222]/40 backdrop-blur-md px-8 flex items-center justify-between">
             <div class="flex items-center space-x-2">
                 <span class="text-xs text-slate-500">Workspace</span>
                 <span class="text-xs text-slate-600">/</span>
                 <span class="text-xs text-slate-300 font-medium font-heading">Active Dashboard</span>
             </div>
             <div class="flex items-center space-x-4">
+                <!-- Database status badge -->
+                <div id="db-status-badge" class="flex items-center space-x-1.5 px-3 py-1 rounded-full text-[10px] font-semibold border bg-slate-800/40 text-slate-400 border-slate-700/40">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span> <span>Checking Database...</span>
+                </div>
                 <div class="h-8 w-px bg-slate-800"></div>
                 <div class="flex items-center space-x-2">
                     <div class="w-8 h-8 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center font-bold text-xs">
@@ -216,9 +220,14 @@
                 
                 <!-- Column 1: AI Meeting Notes -->
                 <div class="bg-[#111726]/40 backdrop-blur-md p-6 rounded-2xl border border-slate-800/60 shadow-lg flex flex-col h-[520px]">
-                    <h2 class="text-md font-bold mb-3 text-white font-heading flex items-center space-x-2 pb-3 border-b border-slate-800/50" id="active-title">
-                        <span>📋 AI Meeting Notes</span>
-                    </h2>
+                    <div class="flex items-center justify-between mb-3 pb-3 border-b border-slate-800/50">
+                        <h2 class="text-md font-bold text-white font-heading flex items-center space-x-2" id="active-title">
+                            <span>📋 AI Notes Summary</span>
+                        </h2>
+                        <button onclick="copyNotes()" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white px-2.5 py-1.5 rounded-lg border border-slate-700/50 transition duration-200 flex items-center space-x-1">
+                            <span>📋</span> <span>Copy Notes</span>
+                        </button>
+                    </div>
                     <div id="notes-output" class="flex-1 overflow-y-auto pr-2 text-sm text-slate-300 bg-[#080c14]/40 p-5 rounded-xl border border-slate-800/40">
                         <!-- Dynamic Notes Output -->
                         <div class="flex flex-col items-center justify-center h-full text-slate-500 space-y-2">
@@ -256,16 +265,30 @@
 
                     <!-- Chat Message Area -->
                     <div id="chat-output" class="flex-1 overflow-y-auto pr-2 space-y-4 bg-[#080c14]/40 p-4 rounded-xl border border-slate-800/40">
-                        <div class="flex flex-col items-center justify-center h-full text-slate-500 space-y-2" id="chat-placeholder">
-                            <span class="text-2xl">💬</span>
-                            <p class="text-xs">Ask questions about key action items, decisions, or timelines.</p>
+                        <div class="flex flex-col items-center justify-center h-full text-slate-500 space-y-4" id="chat-placeholder">
+                            <div class="text-center space-y-1">
+                                <span class="text-2xl">💬</span>
+                                <p class="text-xs">Ask questions about key action items, decisions, or timelines.</p>
+                            </div>
+                            <!-- Suggested Questions -->
+                            <div class="flex flex-wrap gap-2 justify-center max-w-[90%] mt-2">
+                                <button onclick="quickAsk('Summarize this meeting')" class="text-[10px] bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 px-2.5 py-1.5 rounded-lg transition duration-200">
+                                    📋 Summarize Session
+                                </button>
+                                <button onclick="quickAsk('What were the key decisions made?')" class="text-[10px] bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 px-2.5 py-1.5 rounded-lg transition duration-200">
+                                    🎯 Key Decisions
+                                </button>
+                                <button onclick="quickAsk('List the action items and owners')" class="text-[10px] bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 px-2.5 py-1.5 rounded-lg transition duration-200">
+                                    ⚡ Action Items
+                                </button>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Chat Input -->
                     <div class="flex space-x-2 mt-4">
                         <input id="chat-input" type="text" placeholder="Ask a question..." class="flex-1 bg-[#090d16] border border-slate-800/80 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 transition duration-200">
-                        <button onclick="sendChatQuery()" class="bg-slate-850 hover:bg-slate-800 border border-slate-700/60 text-indigo-400 px-5 rounded-xl text-sm font-semibold transition active:scale-[0.98] flex items-center justify-center">
+                        <button onclick="sendChatQuery()" class="bg-indigo-650 hover:bg-indigo-600 text-white px-5 rounded-xl text-sm font-semibold transition active:scale-[0.98] flex items-center justify-center">
                             Ask
                         </button>
                     </div>
@@ -278,44 +301,85 @@
     <!-- Scripts -->
     <script>
         let selectedMeetingId = "1";
+        let selectedFolder = "All";
+        let allMeetings = [];
         
         async function loadDashboard() {
             try {
                 const res = await fetch('/api/dashboard');
                 const data = await res.json();
+                allMeetings = data.meetings;
                 
-                // Folders Listing
-                document.getElementById('folder-list').innerHTML = data.folders.map(f => `
-                    <li class="group flex items-center space-x-3 py-2 px-3 rounded-lg hover:bg-slate-800/40 cursor-pointer text-slate-400 hover:text-white transition-all duration-200">
-                        <span class="text-indigo-400/80 group-hover:text-indigo-400 transition-colors">📁</span>
-                        <span class="font-medium text-xs">${f}</span>
-                    </li>
-                `).join('');
+                // Update DB Status Badge
+                const dbBadge = document.getElementById('db-status-badge');
+                if (dbBadge) {
+                    if (data.db_status === "Supabase") {
+                        dbBadge.className = "flex items-center space-x-1.5 px-3 py-1 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25";
+                        dbBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> <span>Supabase Live</span>`;
+                    } else if (data.db_status && data.db_status.includes("Fallback")) {
+                        dbBadge.className = "flex items-center space-x-1.5 px-3 py-1 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/25 animate-pulse";
+                        dbBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-450 animate-pulse"></span> <span>SQLite Fallback</span>`;
+                    } else {
+                        dbBadge.className = "flex items-center space-x-1.5 px-3 py-1 rounded-full text-[10px] font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/25";
+                        dbBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span> <span>Local Storage</span>`;
+                    }
+                }
                 
-                // History/Recent Meetings Listing
-                document.getElementById('history-list').innerHTML = data.meetings.map(m => {
-                    const isActive = m.id === selectedMeetingId;
+                // Folders Listing (with 'All Folders' pre-appended)
+                const foldersList = [`All`, ...data.folders];
+                document.getElementById('folder-list').innerHTML = foldersList.map(f => {
+                    const isFolderActive = selectedFolder === f;
                     return `
-                        <li onclick="selectMeeting('${m.id}', '${m.title}', \`${encodeURIComponent(m.ai_summary)}\`)"
-                            class="p-3 mb-2 rounded-xl border cursor-pointer transition-all duration-300 relative overflow-hidden group
-                            ${isActive 
-                                ? 'bg-gradient-to-r from-indigo-950/20 to-slate-900/30 border-indigo-500/40 shadow-lg shadow-indigo-500/5' 
-                                : 'bg-slate-900/10 border-slate-800/40 hover:bg-slate-800/30 hover:border-slate-700/40'
+                        <li onclick="filterFolder('${f}')" 
+                            class="group flex items-center space-x-3 py-2 px-3 rounded-lg cursor-pointer transition-all duration-200
+                            ${isFolderActive 
+                                ? 'bg-indigo-600/15 text-indigo-400 border-l-2 border-indigo-500 font-semibold' 
+                                : 'hover:bg-slate-800/40 text-slate-400 hover:text-white'
                             }">
-                            ${isActive ? '<div class="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 rounded-r-md"></div>' : ''}
-                            <div class="flex items-start justify-between">
-                                <div class="truncate pr-2">
-                                    <h4 class="font-semibold text-xs text-slate-200 group-hover:text-indigo-400 transition-colors truncate">${m.title}</h4>
-                                    <span class="text-[9px] text-slate-500 mt-1.5 inline-block bg-slate-800/50 px-1.5 py-0.5 rounded border border-slate-700/30">${m.folder}</span>
-                                </div>
-                                <span class="text-xs text-slate-500 group-hover:text-indigo-400 transition-colors">📄</span>
-                            </div>
+                            <span class="${isFolderActive ? 'text-indigo-400' : 'text-slate-500 group-hover:text-indigo-400'} transition-colors">📁</span>
+                            <span class="text-xs">${f === 'All' ? 'All Folders' : f}</span>
                         </li>
                     `;
                 }).join('');
+                
+                // Filter Meetings by active folder selection
+                const filtered = allMeetings.filter(m => selectedFolder === "All" || m.folder === selectedFolder);
+                
+                // History/Recent Meetings Listing
+                if (filtered.length === 0) {
+                    document.getElementById('history-list').innerHTML = `
+                        <p class="text-[10px] text-slate-500 italic text-center py-4">No meetings in this folder.</p>
+                    `;
+                } else {
+                    document.getElementById('history-list').innerHTML = filtered.map(m => {
+                        const isActive = m.id === selectedMeetingId;
+                        return `
+                            <li onclick="selectMeeting('${m.id}', '${m.title}', \`${encodeURIComponent(m.ai_summary)}\`)"
+                                class="p-3 mb-2 rounded-xl border cursor-pointer transition-all duration-300 relative overflow-hidden group
+                                ${isActive 
+                                    ? 'bg-gradient-to-r from-indigo-950/20 to-slate-900/30 border-indigo-500/40 shadow-lg shadow-indigo-500/5' 
+                                    : 'bg-slate-900/10 border-slate-800/40 hover:bg-slate-800/30 hover:border-slate-700/40'
+                                }">
+                                ${isActive ? '<div class="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 rounded-r-md"></div>' : ''}
+                                <div class="flex items-start justify-between">
+                                    <div class="truncate pr-2">
+                                        <h4 class="font-semibold text-xs text-slate-200 group-hover:text-indigo-400 transition-colors truncate">${m.title}</h4>
+                                        <span class="text-[9px] text-slate-500 mt-1.5 inline-block bg-slate-800/50 px-1.5 py-0.5 rounded border border-slate-700/30">${m.folder}</span>
+                                    </div>
+                                    <span class="text-xs text-slate-500 group-hover:text-indigo-400 transition-colors">📄</span>
+                                </div>
+                            </li>
+                        `;
+                    }).join('');
+                }
             } catch(e) {
                 console.error("Dashboard loading error:", e);
             }
+        }
+        
+        function filterFolder(folderName) {
+            selectedFolder = folderName;
+            loadDashboard();
         }
         
         function selectMeeting(id, title, encodedSummary) {
@@ -403,7 +467,7 @@
             // Append User message
             chatOutput.innerHTML += `
                 <div class="flex justify-end mb-3">
-                    <div class="bg-indigo-600 text-white rounded-2xl rounded-tr-none px-4 py-2 text-xs max-w-[80%] shadow-md shadow-indigo-600/10">
+                    <div class="bg-indigo-600 text-white rounded-2xl rounded-tr-none px-4 py-2 text-xs max-w-[80%] shadow-md shadow-indigo-600/10 animate-fade-in">
                         <span class="block text-[9px] text-indigo-200 font-bold uppercase mb-0.5">You</span>
                         ${payload.question}
                     </div>
@@ -460,6 +524,20 @@
                 `;
             }
             chatOutput.scrollTop = chatOutput.scrollHeight;
+        }
+
+        function quickAsk(question) {
+            document.getElementById('chat-input').value = question;
+            sendChatQuery();
+        }
+
+        function copyNotes() {
+            const notesText = document.getElementById('notes-output').innerText;
+            navigator.clipboard.writeText(notesText).then(() => {
+                alert("Copied AI notes to clipboard! 📋");
+            }).catch(err => {
+                console.error("Clipboard copy failed:", err);
+            });
         }
 
         // Handle enter key in chat

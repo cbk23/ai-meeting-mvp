@@ -14,13 +14,15 @@ app = FastAPI(title="AI Meeting Assistant MVP")
 # DATABASE SETUP (SQLite & PostgreSQL Dual Support)
 # -------------------------------------------------------------------------
 DATABASE = os.getenv("DATABASE_URL", "meetings.db")
+db_status = "SQLite" # Global DB tracking variable
 
 def is_postgres():
     """Check if the database URL points to PostgreSQL"""
     return DATABASE.startswith("postgres://") or DATABASE.startswith("postgresql://")
 
 def get_db():
-    """Get database connection based on DB type"""
+    """Get database connection with automatic fallback"""
+    global db_status
     if is_postgres():
         import psycopg2
         from psycopg2.extras import DictCursor
@@ -36,9 +38,34 @@ def get_db():
             else:
                 conn_str += "?sslmode=require"
                 
-        conn = psycopg2.connect(conn_str, cursor_factory=DictCursor)
-        return conn
+        try:
+            conn = psycopg2.connect(conn_str, cursor_factory=DictCursor)
+            db_status = "Supabase"
+            return conn
+        except Exception as e:
+            print(f"PostgreSQL connection failed, falling back to local SQLite: {str(e)}")
+            db_status = "Local SQLite (Fallback)"
+            conn = sqlite3.connect("meetings.db")
+            conn.row_factory = sqlite3.Row
+            # Try to initialize SQLite table if not present, to ensure fallback is complete
+            try:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS meetings (
+                        id TEXT PRIMARY KEY,
+                        title TEXT NOT NULL,
+                        folder TEXT NOT NULL,
+                        transcript TEXT NOT NULL,
+                        ai_summary TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                ''')
+                conn.commit()
+            except Exception as init_err:
+                print(f"Failed to auto-init fallback database: {init_err}")
+            return conn
     else:
+        db_status = "SQLite"
         conn = sqlite3.connect(DATABASE)
         conn.row_factory = sqlite3.Row
         return conn
@@ -92,10 +119,10 @@ def init_db():
         
         conn.commit()
         conn.close()
-        print("✅ Database initialization successful")
+        print("Database initialization successful")
     except Exception as e:
-        print(f"🚨 DATABASE INITIALIZATION WARNING: {str(e)}")
-        print("⚠️ Application will continue to run, but database queries may fail.")
+        print(f"DATABASE INITIALIZATION WARNING: {str(e)}")
+        print("Application will continue to run, but database queries may fail.")
 
 # Initialize database on startup
 init_db()
@@ -170,10 +197,11 @@ def save_meeting(meeting_id: str, title: str, folder: str, transcript: str, ai_s
 
 @app.get("/api/dashboard")
 def get_dashboard():
-    """Get dashboard data: folders and recent meetings"""
+    """Get dashboard data: folders, recent meetings, and database status"""
     return {
         "folders": folders,
-        "meetings": get_all_meetings()
+        "meetings": get_all_meetings(),
+        "db_status": db_status
     }
 
 @app.post("/api/notes/generate")
@@ -200,7 +228,7 @@ def generate_notes(payload: ProcessMeetingRequest):
             )
             ai_notes = response.text
         except Exception as e:
-            print(f"\n{'='*50}\n🚨 GEMINI API ERROR:\n{str(e)}\n{'='*50}\n")
+            print(f"\n{'='*50}\nGEMINI API ERROR:\n{str(e)}\n{'='*50}\n")
             raise HTTPException(status_code=500, detail=f"Gemini API Error: {str(e)}")
            
     # Generate unique ID
@@ -246,7 +274,7 @@ def chat_with_context(payload: ChatRequest):
         )
         return {"answer": response.text}
     except Exception as e:
-        print(f"\n{'='*50}\n🚨 GEMINI CHAT ERROR:\n{str(e)}\n{'='*50}\n")
+        print(f"\n{'='*50}\nGEMINI CHAT ERROR:\n{str(e)}\n{'='*50}\n")
         return {"answer": f"Error communicating with AI: {str(e)}"}
 
 @app.get("/", response_class=HTMLResponse)
