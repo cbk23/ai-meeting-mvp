@@ -51,46 +51,51 @@ def prepare_query(query: str) -> str:
 
 def init_db():
     """Initialize database schema"""
-    conn = get_db()
-    cursor = conn.cursor()
-    
-    cursor.execute(prepare_query('''
-        CREATE TABLE IF NOT EXISTS meetings (
-            id TEXT PRIMARY KEY,
-            title TEXT NOT NULL,
-            folder TEXT NOT NULL,
-            transcript TEXT NOT NULL,
-            ai_summary TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    '''))
-    
-    # Check if table is empty and seed with demo data
-    cursor.execute('SELECT COUNT(*) FROM meetings')
-    if cursor.fetchone()[0] == 0:
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        
         cursor.execute(prepare_query('''
-            INSERT INTO meetings (id, title, folder, transcript, ai_summary) VALUES
-            (?, ?, ?, ?, ?)
-        '''), (
-            "1",
-            "Q3 Roadmap Alignment",
-            "Engineering",
-            "John: We need to ship the shared folders feature by June. Sarah: Multi-language support is lagging because of the translation API. John: Let's prioritize folders first, then multi-language.",
-            "### AI Meeting Notes\n* **Key Topic:** Q3 Feature Prioritization\n* **Decision:** Shared folders prioritized over multi-language support.\n* **Action Item:** John to oversee folder deployment timeline by June."
-        ))
-        cursor.execute(prepare_query('''
-            INSERT INTO meetings (id, title, folder, transcript, ai_summary) VALUES
-            (?, ?, ?, ?, ?)
-        '''), (
-            "2",
-            "Marketing Sync & Budget",
-            "Marketing",
-            "Alice: The ad spend for May is trending at $5,000. Bob: We should increase it if the conversion rate stays above 3%. Alice: Agreed, let's review next Tuesday.",
-            "### AI Meeting Notes\n* **Key Topic:** May Ad Spend\n* **Decision:** Conditionally increase budget if conversions hold above 3%.\n* **Action Item:** Alice and Bob to sync next Tuesday."
-        ))
-    
-    conn.commit()
-    conn.close()
+            CREATE TABLE IF NOT EXISTS meetings (
+                id TEXT PRIMARY KEY,
+                title TEXT NOT NULL,
+                folder TEXT NOT NULL,
+                transcript TEXT NOT NULL,
+                ai_summary TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        '''))
+        
+        # Check if table is empty and seed with demo data
+        cursor.execute('SELECT COUNT(*) FROM meetings')
+        if cursor.fetchone()[0] == 0:
+            cursor.execute(prepare_query('''
+                INSERT INTO meetings (id, title, folder, transcript, ai_summary) VALUES
+                (?, ?, ?, ?, ?)
+            '''), (
+                "1",
+                "Q3 Roadmap Alignment",
+                "Engineering",
+                "John: We need to ship the shared folders feature by June. Sarah: Multi-language support is lagging because of the translation API. John: Let's prioritize folders first, then multi-language.",
+                "### AI Meeting Notes\n* **Key Topic:** Q3 Feature Prioritization\n* **Decision:** Shared folders prioritized over multi-language support.\n* **Action Item:** John to oversee folder deployment timeline by June."
+            ))
+            cursor.execute(prepare_query('''
+                INSERT INTO meetings (id, title, folder, transcript, ai_summary) VALUES
+                (?, ?, ?, ?, ?)
+            '''), (
+                "2",
+                "Marketing Sync & Budget",
+                "Marketing",
+                "Alice: The ad spend for May is trending at $5,000. Bob: We should increase it if the conversion rate stays above 3%. Alice: Agreed, let's review next Tuesday.",
+                "### AI Meeting Notes\n* **Key Topic:** May Ad Spend\n* **Decision:** Conditionally increase budget if conversions hold above 3%.\n* **Action Item:** Alice and Bob to sync next Tuesday."
+            ))
+        
+        conn.commit()
+        conn.close()
+        print("✅ Database initialization successful")
+    except Exception as e:
+        print(f"🚨 DATABASE INITIALIZATION WARNING: {str(e)}")
+        print("⚠️ Application will continue to run, but database queries may fail.")
 
 # Initialize database on startup
 init_db()
