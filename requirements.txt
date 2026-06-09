@@ -1,17 +1,18 @@
-﻿# Core FastAPI dependencies
+# Core FastAPI dependencies
 fastapi==0.110.0
 uvicorn[standard]==0.28.0
 google-generativeai==0.4.1
-pydantic==2.6.4
+google-genai
+pydantic
 python-dotenv==1.0.0
+psycopg2-binary
 
 # Zoom Bot integration
 requests==2.31.0
 PyJWT==2.8.0
 
-# Transcription options
-# Local transcription (free, offline) - recommended for MVP
-openai-whisper==20231117
+# Transcription options (Optional - commented out to allow web app deploy to work without heavy builds)
+# openai-whisper==20231117
 
 # Audio processing (optional, for duration estimation)
-pydub==0.25.1
+# pydub==0.25.1

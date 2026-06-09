@@ -11,22 +11,50 @@ import json
 app = FastAPI(title="AI Meeting Assistant MVP")
 
 # -------------------------------------------------------------------------
-# DATABASE SETUP (SQLite)
+# DATABASE SETUP (SQLite & PostgreSQL Dual Support)
 # -------------------------------------------------------------------------
 DATABASE = os.getenv("DATABASE_URL", "meetings.db")
 
+def is_postgres():
+    """Check if the database URL points to PostgreSQL"""
+    return DATABASE.startswith("postgres://") or DATABASE.startswith("postgresql://")
+
 def get_db():
-    """Get database connection"""
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-    return conn
+    """Get database connection based on DB type"""
+    if is_postgres():
+        import psycopg2
+        from psycopg2.extras import DictCursor
+        conn_str = DATABASE
+        # Fix for platforms that provide 'postgres://' connection strings
+        if conn_str.startswith("postgres://"):
+            conn_str = conn_str.replace("postgres://", "postgresql://", 1)
+        
+        # Enable SSL for secure production connection (e.g., Supabase)
+        if "sslmode" not in conn_str and "localhost" not in conn_str and "127.0.0.1" not in conn_str:
+            if "?" in conn_str:
+                conn_str += "&sslmode=require"
+            else:
+                conn_str += "?sslmode=require"
+                
+        conn = psycopg2.connect(conn_str, cursor_factory=DictCursor)
+        return conn
+    else:
+        conn = sqlite3.connect(DATABASE)
+        conn.row_factory = sqlite3.Row
+        return conn
+
+def prepare_query(query: str) -> str:
+    """Replace ? placeholders with %s if using PostgreSQL"""
+    if is_postgres():
+        return query.replace("?", "%s")
+    return query
 
 def init_db():
     """Initialize database schema"""
     conn = get_db()
     cursor = conn.cursor()
     
-    cursor.execute('''
+    cursor.execute(prepare_query('''
         CREATE TABLE IF NOT EXISTS meetings (
             id TEXT PRIMARY KEY,
             title TEXT NOT NULL,
@@ -35,25 +63,25 @@ def init_db():
             ai_summary TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-    ''')
+    '''))
     
     # Check if table is empty and seed with demo data
     cursor.execute('SELECT COUNT(*) FROM meetings')
     if cursor.fetchone()[0] == 0:
-        cursor.execute('''
+        cursor.execute(prepare_query('''
             INSERT INTO meetings (id, title, folder, transcript, ai_summary) VALUES
             (?, ?, ?, ?, ?)
-        ''', (
+        '''), (
             "1",
             "Q3 Roadmap Alignment",
             "Engineering",
             "John: We need to ship the shared folders feature by June. Sarah: Multi-language support is lagging because of the translation API. John: Let's prioritize folders first, then multi-language.",
             "### AI Meeting Notes\n* **Key Topic:** Q3 Feature Prioritization\n* **Decision:** Shared folders prioritized over multi-language support.\n* **Action Item:** John to oversee folder deployment timeline by June."
         ))
-        cursor.execute('''
+        cursor.execute(prepare_query('''
             INSERT INTO meetings (id, title, folder, transcript, ai_summary) VALUES
             (?, ?, ?, ?, ?)
-        ''', (
+        '''), (
             "2",
             "Marketing Sync & Budget",
             "Marketing",
@@ -90,7 +118,7 @@ def get_all_meetings():
     """Fetch all meetings from database"""
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM meetings ORDER BY created_at DESC LIMIT 5')
+    cursor.execute(prepare_query('SELECT * FROM meetings ORDER BY created_at DESC LIMIT 5'))
     meetings = []
     for row in cursor.fetchall():
         meetings.append({
@@ -107,7 +135,7 @@ def get_meeting_by_id(meeting_id: str):
     """Fetch a specific meeting"""
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM meetings WHERE id = ?', (meeting_id,))
+    cursor.execute(prepare_query('SELECT * FROM meetings WHERE id = ?'), (meeting_id,))
     row = cursor.fetchone()
     conn.close()
     if row:
@@ -124,10 +152,10 @@ def save_meeting(meeting_id: str, title: str, folder: str, transcript: str, ai_s
     """Save a new meeting to database"""
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute('''
+    cursor.execute(prepare_query('''
         INSERT INTO meetings (id, title, folder, transcript, ai_summary)
         VALUES (?, ?, ?, ?, ?)
-    ''', (meeting_id, title, folder, transcript, ai_summary))
+    '''), (meeting_id, title, folder, transcript, ai_summary))
     conn.commit()
     conn.close()
 
@@ -156,7 +184,7 @@ def generate_notes(payload: ProcessMeetingRequest):
    
     api_key = os.environ.get("GEMINI_API_KEY")
    
-    if not api_key or api_key.strip() == "":
+    if not api_key or api_key.strip() == "" or "your-gemini-api-key" in api_key:
         ai_notes = f"### [DEMO MODE] AI Summary ({payload.template.upper()})\n\nProcessed transcript for '{payload.title}' successfully!\n\n**Note:** Set your GEMINI_API_KEY environment variable to enable real AI analysis."
     else:
         try:
@@ -202,7 +230,7 @@ def chat_with_context(payload: ChatRequest):
    
     api_key = os.environ.get("GEMINI_API_KEY")
     
-    if not api_key or api_key.strip() == "":
+    if not api_key or api_key.strip() == "" or "your-gemini-api-key" in api_key:
         return {"answer": "[DEMO MODE] Set your GEMINI_API_KEY environment variable to enable AI responses."}
    
     try:

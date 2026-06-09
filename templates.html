@@ -2,116 +2,476 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>AI Meeting Assistant MVP</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>MeetingAI - Premium Workspace Dashboard</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Marked Markdown Parser -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b0f19;
+            color: #cbd5e1;
+        }
+        h1, h2, h3, h4, .font-heading {
+            font-family: 'Outfit', sans-serif;
+        }
+        /* Custom scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(13, 19, 36, 0.5);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.2);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.4);
+        }
+        /* Markdown rendering styles */
+        #notes-output h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-top: 1.25rem;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+            padding-bottom: 0.35rem;
+        }
+        #notes-output h3:first-child {
+            margin-top: 0;
+        }
+        #notes-output ul {
+            list-style-type: disc;
+            padding-left: 1.25rem;
+            margin-bottom: 0.85rem;
+            color: #cbd5e1;
+        }
+        #notes-output li {
+            margin-bottom: 0.35rem;
+            line-height: 1.5;
+        }
+        #notes-output strong {
+            color: #f8fafc;
+            font-weight: 600;
+        }
+        #notes-output p {
+            margin-bottom: 0.75rem;
+            line-height: 1.6;
+        }
+    </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans">
-    <div class="flex h-screen">
-        <div class="w-1/4 bg-slate-900 text-white p-6 flex flex-col justify-between">
-            <div>
-                <h1 class="text-xl font-bold tracking-tight mb-6">🎙️ MeetingAI</h1>
-                <div class="mb-8">
-                    <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Shared Folders</h3>
-                    <ul id="folder-list" class="space-y-1 text-sm text-slate-300"></ul>
+<body class="h-screen overflow-hidden flex">
+
+    <!-- SIDEBAR -->
+    <div class="w-80 bg-[#0d1324] border-r border-slate-800/60 flex flex-col justify-between h-full z-10 shadow-xl shadow-black/20">
+        <div class="p-6 flex-1 flex flex-col min-h-0">
+            <!-- Header Brand -->
+            <div class="flex items-center space-x-3 mb-8">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                    <span class="text-xl">🎙️</span>
                 </div>
                 <div>
-                    <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Meeting History (Limited Tier)</h3>
-                    <ul id="history-list" class="space-y-2 text-sm"></ul>
+                    <h1 class="text-lg font-bold tracking-tight text-white bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-300">MeetingAI</h1>
+                    <span class="text-[10px] uppercase tracking-widest text-indigo-400 font-semibold">Workspace Pro</span>
                 </div>
             </div>
-            <div class="text-xs text-slate-500">MVP Tier • Active Dashboard</div>
+
+            <!-- Folders Section -->
+            <div class="mb-8">
+                <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 px-2">Shared Folders</h3>
+                <ul id="folder-list" class="space-y-1">
+                    <!-- Dynamic Folders -->
+                </ul>
+            </div>
+
+            <!-- History Section -->
+            <div class="flex-1 flex flex-col min-h-0">
+                <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 px-2 flex justify-between items-center">
+                    <span>Meeting History</span>
+                    <span class="bg-indigo-500/10 text-indigo-400 text-[9px] font-semibold px-1.5 py-0.5 rounded border border-indigo-500/20">Pro Tier</span>
+                </h3>
+                <div class="flex-1 overflow-y-auto px-1 pr-2" id="history-list-container">
+                    <ul id="history-list" class="space-y-1">
+                        <!-- Dynamic History -->
+                    </ul>
+                </div>
+            </div>
         </div>
-        <div class="flex-1 p-8 overflow-y-auto flex flex-col space-y-6">
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <h2 class="text-lg font-semibold mb-4 text-gray-900">Process New Transcript</h2>
-                <div class="grid grid-cols-3 gap-4 mb-4">
-                    <input id="meet-title" type="text" placeholder="Meeting Title" class="p-2 border rounded-lg text-sm">
-                    <select id="meet-folder" class="p-2 border rounded-lg text-sm">
-                        <option value="Engineering">Engineering</option>
-                        <option value="Marketing">Marketing</option>
-                        <option value="General">General</option>
-                    </select>
-                    <select id="meet-template" class="p-2 border rounded-lg text-sm">
-                        <option value="standard">Standard Template</option>
-                        <option value="agile">Agile Standup Template</option>
-                        <option value="executive">Executive Summary Template</option>
-                    </select>
+
+        <!-- Sidebar Footer -->
+        <div class="p-4 border-t border-slate-800/60 bg-[#0a0f1d]/80">
+            <div class="bg-slate-900/60 rounded-xl p-3 border border-slate-800/40 relative overflow-hidden group">
+                <div class="absolute -right-6 -bottom-6 w-16 h-16 rounded-full bg-indigo-500/5 group-hover:scale-150 transition-transform duration-500"></div>
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold text-white font-heading">Pro Active Workspace</span>
+                    <span class="text-[9px] bg-emerald-500/15 text-emerald-400 font-semibold px-1.5 py-0.5 rounded border border-emerald-500/20">Active</span>
                 </div>
-                <textarea id="meet-transcript" rows="3" placeholder="Paste meeting transcript strings here..." class="w-full p-3 border rounded-lg text-sm mb-4"></textarea>
-                <button onclick="submitTranscript()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition">Generate AI Notes</button>
-            </div>
-            <div class="grid grid-cols-2 gap-6 flex-1">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col">
-                    <h2 class="text-lg font-semibold mb-2 text-gray-900" id="active-title">AI Meeting Notes</h2>
-                    <div id="notes-output" class="prose prose-sm overflow-y-auto max-h-[350px] p-4 bg-gray-50 rounded-lg text-gray-700">Select or process a meeting to generate analytical notes.</div>
+                <div class="w-full bg-slate-800 h-1.5 rounded-full mb-1">
+                    <div class="bg-gradient-to-r from-indigo-500 to-violet-500 h-1.5 rounded-full" style="width: 78%"></div>
                 </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col justify-between">
-                    <div>
-                        <h2 class="text-lg font-semibold mb-1 text-gray-900">AI Chat Assistant</h2>
-                        <div class="flex space-x-4 mb-4 text-xs">
-                            <label><input type="radio" name="chat-scope" value="current" checked> Within current meeting</label>
-                            <label><input type="radio" name="chat-scope" value="all"> Across all meetings</label>
-                        </div>
-                        <div id="chat-output" class="text-sm text-gray-600 bg-slate-50 p-4 rounded-lg h-[240px] overflow-y-auto space-y-2">
-                            <p class="italic text-gray-400">Ask a question targeted to your selection scope above...</p>
-                        </div>
-                    </div>
-                    <div class="flex space-x-2 mt-4">
-                        <input id="chat-input" type="text" placeholder="e.g., What was the budget decision?" class="flex-1 p-2 border rounded-lg text-sm">
-                        <button onclick="sendChatQuery()" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm hover:bg-slate-900">Ask</button>
-                    </div>
+                <div class="flex justify-between text-[9px] text-slate-500">
+                    <span>782/1,000 Credits</span>
+                    <span>Resets July 1</span>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- MAIN CONTENT AREA -->
+    <div class="flex-1 flex flex-col h-full bg-[#090d16] overflow-hidden">
+        
+        <!-- Header Topbar -->
+        <header class="h-16 border-b border-slate-800/50 bg-[#0d1324]/40 backdrop-blur-md px-8 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <span class="text-xs text-slate-500">Workspace</span>
+                <span class="text-xs text-slate-600">/</span>
+                <span class="text-xs text-slate-300 font-medium font-heading">Active Dashboard</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="h-8 w-px bg-slate-800"></div>
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center font-bold text-xs">
+                        KC
+                    </div>
+                    <span class="text-xs text-slate-300 font-medium">Karthik Workspace</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Workspace Area -->
+        <div class="flex-1 p-8 overflow-y-auto space-y-6">
+            
+            <!-- Welcome Alert/Banner -->
+            <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-950/40 via-slate-900/50 to-slate-900/20 border border-indigo-500/20 p-6 flex justify-between items-center">
+                <div class="absolute right-0 top-0 -mt-10 -mr-10 w-40 h-40 bg-indigo-500/5 rounded-full blur-2xl"></div>
+                <div>
+                    <h2 class="text-lg font-bold text-white mb-1">Welcome to MeetingAI Workspace</h2>
+                    <p class="text-xs text-slate-400">Generate structured AI notes, summarize action items, and chat with files instantly using Gemini 2.5 Flash.</p>
+                </div>
+                <div class="flex space-x-2">
+                    <span class="text-xs bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-lg px-3 py-1.5 font-medium font-heading">Supabase Production</span>
+                </div>
+            </div>
+
+            <!-- Process New Transcript Form Card -->
+            <div class="bg-[#111726]/40 backdrop-blur-md p-6 rounded-2xl border border-slate-800/60 shadow-lg relative">
+                <h2 class="text-md font-bold mb-4 text-white font-heading flex items-center space-x-2">
+                    <span class="text-indigo-400">📝</span>
+                    <span>Process New Transcript</span>
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div class="flex flex-col space-y-1.5">
+                        <label class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Meeting Title</label>
+                        <input id="meet-title" type="text" placeholder="e.g., Q4 Sprint Planning" class="w-full bg-[#090d16] border border-slate-800/80 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 transition duration-200">
+                    </div>
+                    
+                    <div class="flex flex-col space-y-1.5">
+                        <label class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Workspace Folder</label>
+                        <select id="meet-folder" class="w-full bg-[#090d16] border border-slate-800/80 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 transition duration-200 cursor-pointer">
+                            <option value="Engineering">Engineering</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="General">General</option>
+                        </select>
+                    </div>
+                    
+                    <div class="flex flex-col space-y-1.5">
+                        <label class="text-[10px] uppercase tracking-wider font-bold text-slate-500">AI Scribe Template</label>
+                        <select id="meet-template" class="w-full bg-[#090d16] border border-slate-800/80 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 transition duration-200 cursor-pointer">
+                            <option value="standard">Standard Template (Action Items)</option>
+                            <option value="agile">Agile Standup Template (Blockers & Tasks)</option>
+                            <option value="executive">Executive Summary Template (Strategic)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex flex-col space-y-1.5 mb-4">
+                    <label class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Transcript Strings</label>
+                    <textarea id="meet-transcript" rows="3" placeholder="Paste meeting transcript strings here... (e.g. John: We should build the database model. Sarah: Agreed, I'll take care of it.)" class="w-full bg-[#090d16] border border-slate-800/80 rounded-xl p-4 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 transition duration-200"></textarea>
+                </div>
+
+                <div class="flex justify-end">
+                    <button id="btn-generate" onclick="submitTranscript()" class="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-300 transform active:scale-[0.98]">
+                        Generate AI Notes
+                    </button>
+                </div>
+            </div>
+
+            <!-- Notes & Chat Two-Column Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[400px]">
+                
+                <!-- Column 1: AI Meeting Notes -->
+                <div class="bg-[#111726]/40 backdrop-blur-md p-6 rounded-2xl border border-slate-800/60 shadow-lg flex flex-col h-[520px]">
+                    <h2 class="text-md font-bold mb-3 text-white font-heading flex items-center space-x-2 pb-3 border-b border-slate-800/50" id="active-title">
+                        <span>📋 AI Meeting Notes</span>
+                    </h2>
+                    <div id="notes-output" class="flex-1 overflow-y-auto pr-2 text-sm text-slate-300 bg-[#080c14]/40 p-5 rounded-xl border border-slate-800/40">
+                        <!-- Dynamic Notes Output -->
+                        <div class="flex flex-col items-center justify-center h-full text-slate-500 space-y-2">
+                            <span class="text-2xl">📄</span>
+                            <p class="text-xs">Select a meeting from the sidebar or process a transcript to view AI notes.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 2: AI Chat Assistant -->
+                <div class="bg-[#111726]/40 backdrop-blur-md p-6 rounded-2xl border border-slate-800/60 shadow-lg flex flex-col h-[520px]">
+                    <div class="border-b border-slate-800/50 pb-3 mb-3">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-md font-bold text-white font-heading flex items-center space-x-2">
+                                <span class="text-indigo-400">🤖</span>
+                                <span>AI Chat Assistant</span>
+                            </h2>
+                            <!-- Scope Toggle -->
+                            <div class="flex bg-[#090d16] p-1 rounded-xl border border-slate-800/80">
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="chat-scope" value="current" checked class="sr-only peer">
+                                    <span class="text-[10px] font-semibold text-slate-400 px-3 py-1.5 rounded-lg block peer-checked:bg-indigo-600 peer-checked:text-white transition duration-200">
+                                        Current Session
+                                    </span>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="chat-scope" value="all" class="sr-only peer">
+                                    <span class="text-[10px] font-semibold text-slate-400 px-3 py-1.5 rounded-lg block peer-checked:bg-indigo-600 peer-checked:text-white transition duration-200">
+                                        All Sessions
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chat Message Area -->
+                    <div id="chat-output" class="flex-1 overflow-y-auto pr-2 space-y-4 bg-[#080c14]/40 p-4 rounded-xl border border-slate-800/40">
+                        <div class="flex flex-col items-center justify-center h-full text-slate-500 space-y-2" id="chat-placeholder">
+                            <span class="text-2xl">💬</span>
+                            <p class="text-xs">Ask questions about key action items, decisions, or timelines.</p>
+                        </div>
+                    </div>
+
+                    <!-- Chat Input -->
+                    <div class="flex space-x-2 mt-4">
+                        <input id="chat-input" type="text" placeholder="Ask a question..." class="flex-1 bg-[#090d16] border border-slate-800/80 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 transition duration-200">
+                        <button onclick="sendChatQuery()" class="bg-slate-850 hover:bg-slate-800 border border-slate-700/60 text-indigo-400 px-5 rounded-xl text-sm font-semibold transition active:scale-[0.98] flex items-center justify-center">
+                            Ask
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
     <script>
         let selectedMeetingId = "1";
+        
         async function loadDashboard() {
-            const res = await fetch('/api/dashboard');
-            const data = await res.json();
-            document.getElementById('folder-list').innerHTML = data.folders.map(f => `<li class="py-1 px-2 rounded hover:bg-slate-800 cursor-pointer">📁 ${f}</li>`).join('');
-            document.getElementById('history-list').innerHTML = data.meetings.map(m => `
-                <li onclick="selectMeeting('${m.id}', '${m.title}', \`${encodeURIComponent(m.ai_summary)}\`)"
-                    class="p-2 rounded bg-slate-800 hover:bg-indigo-900 cursor-pointer transition truncate ${m.id === selectedMeetingId ? 'border-l-4 border-indigo-400 bg-indigo-950' : ''}">
-                    📄 ${m.title}
-                </li>
-            `).join('');
+            try {
+                const res = await fetch('/api/dashboard');
+                const data = await res.json();
+                
+                // Folders Listing
+                document.getElementById('folder-list').innerHTML = data.folders.map(f => `
+                    <li class="group flex items-center space-x-3 py-2 px-3 rounded-lg hover:bg-slate-800/40 cursor-pointer text-slate-400 hover:text-white transition-all duration-200">
+                        <span class="text-indigo-400/80 group-hover:text-indigo-400 transition-colors">📁</span>
+                        <span class="font-medium text-xs">${f}</span>
+                    </li>
+                `).join('');
+                
+                // History/Recent Meetings Listing
+                document.getElementById('history-list').innerHTML = data.meetings.map(m => {
+                    const isActive = m.id === selectedMeetingId;
+                    return `
+                        <li onclick="selectMeeting('${m.id}', '${m.title}', \`${encodeURIComponent(m.ai_summary)}\`)"
+                            class="p-3 mb-2 rounded-xl border cursor-pointer transition-all duration-300 relative overflow-hidden group
+                            ${isActive 
+                                ? 'bg-gradient-to-r from-indigo-950/20 to-slate-900/30 border-indigo-500/40 shadow-lg shadow-indigo-500/5' 
+                                : 'bg-slate-900/10 border-slate-800/40 hover:bg-slate-800/30 hover:border-slate-700/40'
+                            }">
+                            ${isActive ? '<div class="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500 rounded-r-md"></div>' : ''}
+                            <div class="flex items-start justify-between">
+                                <div class="truncate pr-2">
+                                    <h4 class="font-semibold text-xs text-slate-200 group-hover:text-indigo-400 transition-colors truncate">${m.title}</h4>
+                                    <span class="text-[9px] text-slate-500 mt-1.5 inline-block bg-slate-800/50 px-1.5 py-0.5 rounded border border-slate-700/30">${m.folder}</span>
+                                </div>
+                                <span class="text-xs text-slate-500 group-hover:text-indigo-400 transition-colors">📄</span>
+                            </div>
+                        </li>
+                    `;
+                }).join('');
+            } catch(e) {
+                console.error("Dashboard loading error:", e);
+            }
         }
+        
         function selectMeeting(id, title, encodedSummary) {
             selectedMeetingId = id;
-            document.getElementById('active-title').innerText = `AI Notes: ${title}`;
+            document.getElementById('active-title').innerHTML = `<span>📋 AI Notes: ${title}</span>`;
             document.getElementById('notes-output').innerHTML = marked.parse(decodeURIComponent(encodedSummary));
             loadDashboard();
         }
+        
         async function submitTranscript() {
+            const btn = document.getElementById('btn-generate');
+            const notesOutput = document.getElementById('notes-output');
+            
             const payload = {
                 title: document.getElementById('meet-title').value || "Untitled Session",
                 folder: document.getElementById('meet-folder').value,
                 transcript: document.getElementById('meet-transcript').value,
                 template: document.getElementById('meet-template').value
             };
-            if(!payload.transcript) return alert("Please enter a text transcript!");
-            const res = await fetch('/api/notes/generate', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
-            const freshMeeting = await res.json();
-            selectMeeting(freshMeeting.id, freshMeeting.title, encodeURIComponent(freshMeeting.ai_summary));
+            
+            if(!payload.transcript) {
+                alert("Please paste a text transcript first!");
+                return;
+            }
+            
+            // Set loading state
+            btn.disabled = true;
+            btn.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg> Analyzing with Gemini...
+            `;
+            
+            notesOutput.innerHTML = `
+                <div class="animate-pulse space-y-4 py-1">
+                    <div class="h-4 bg-slate-800 rounded w-3/4"></div>
+                    <div class="space-y-2">
+                        <div class="h-4 bg-slate-800 rounded"></div>
+                        <div class="h-4 bg-slate-800 rounded w-5/6"></div>
+                        <div class="h-4 bg-slate-800 rounded w-2/3"></div>
+                    </div>
+                </div>
+            `;
+            
+            try {
+                const res = await fetch('/api/notes/generate', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify(payload) 
+                });
+                const freshMeeting = await res.json();
+                
+                // Clear input form fields
+                document.getElementById('meet-title').value = '';
+                document.getElementById('meet-transcript').value = '';
+                
+                selectMeeting(freshMeeting.id, freshMeeting.title, encodeURIComponent(freshMeeting.ai_summary));
+            } catch(e) {
+                notesOutput.innerHTML = `<p class="text-red-400">Error communicating with API layer. Please check server logs.</p>`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `Generate AI Notes`;
+            }
         }
+        
         async function sendChatQuery() {
             const questionElement = document.getElementById('chat-input');
             const scope = document.querySelector('input[name="chat-scope"]:checked').value;
             const chatOutput = document.getElementById('chat-output');
-            const payload = { question: questionElement.value, scope: scope, current_meeting_id: selectedMeetingId };
+            const placeholder = document.getElementById('chat-placeholder');
+            
+            const payload = { 
+                question: questionElement.value.trim(), 
+                scope: scope, 
+                current_meeting_id: selectedMeetingId 
+            };
+            
             if(!payload.question) return;
-            chatOutput.innerHTML += `<p class="text-right"><b>You:</b> ${payload.question}</p>`;
+            
+            if (placeholder) {
+                placeholder.remove();
+            }
+            
+            // Append User message
+            chatOutput.innerHTML += `
+                <div class="flex justify-end mb-3">
+                    <div class="bg-indigo-600 text-white rounded-2xl rounded-tr-none px-4 py-2 text-xs max-w-[80%] shadow-md shadow-indigo-600/10">
+                        <span class="block text-[9px] text-indigo-200 font-bold uppercase mb-0.5">You</span>
+                        ${payload.question}
+                    </div>
+                </div>
+            `;
+            
+            const typingId = "typing-" + Date.now();
+            // Append Typing Indicator
+            chatOutput.innerHTML += `
+                <div class="flex justify-start mb-3" id="${typingId}">
+                    <div class="bg-slate-800/80 border border-slate-700/40 text-slate-300 rounded-2xl rounded-tl-none px-4 py-3 text-sm max-w-[80%]">
+                        <div class="flex items-center space-x-1">
+                            <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 0ms"></span>
+                            <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 150ms"></span>
+                            <span class="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 300ms"></span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            chatOutput.scrollTop = chatOutput.scrollHeight;
             questionElement.value = '';
-            const res = await fetch('/api/chat', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
-            const data = await res.json();
-            chatOutput.innerHTML += `<p class="text-left text-indigo-700 bg-indigo-50 p-2 rounded"><b>AI Scribe:</b> ${data.answer}</p>`;
+            
+            try {
+                const res = await fetch('/api/chat', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify(payload) 
+                });
+                const data = await res.json();
+                
+                // Remove typing indicator
+                const typingNode = document.getElementById(typingId);
+                if(typingNode) typingNode.remove();
+                
+                chatOutput.innerHTML += `
+                    <div class="flex justify-start mb-3">
+                        <div class="bg-slate-900 border border-slate-800 text-slate-100 rounded-2xl rounded-tl-none px-4 py-2 text-xs max-w-[80%] shadow-lg shadow-black/10">
+                            <span class="block text-[9px] text-indigo-400 font-bold uppercase mb-0.5">AI Scribe</span>
+                            ${data.answer}
+                        </div>
+                    </div>
+                `;
+            } catch(e) {
+                const typingNode = document.getElementById(typingId);
+                if(typingNode) typingNode.remove();
+                
+                chatOutput.innerHTML += `
+                    <div class="flex justify-start mb-3">
+                        <div class="bg-red-950/20 border border-red-900/50 text-red-300 rounded-2xl rounded-tl-none px-4 py-2 text-xs max-w-[80%]">
+                            Error communicating with AI.
+                        </div>
+                    </div>
+                `;
+            }
             chatOutput.scrollTop = chatOutput.scrollHeight;
         }
+
+        // Handle enter key in chat
+        document.getElementById('chat-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                sendChatQuery();
+            }
+        });
+        
         window.onload = () => {
             loadDashboard();
-            selectMeeting("1", "Q3 Roadmap Alignment", `### AI Meeting Notes\n* **Key Topic:** Q3 Feature Prioritization\n* **Decision:** Shared folders prioritized over multi-language support.`);
+            selectMeeting("1", "Q3 Roadmap Alignment", `### AI Meeting Notes\n* **Key Topic:** Q3 Feature Prioritization\n* **Decision:** Shared folders prioritized over multi-language support.\n* **Action Item:** John to oversee folder deployment timeline by June.`);
         };
     </script>
 </body>
